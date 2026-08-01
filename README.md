@@ -20,8 +20,7 @@ src/fitness_assistant/
 ├── rag/           # RAG pipeline: retrieve -> prompt -> answer
 ├── llm/           # Groq client and prompt templates
 ├── eval/          # ground-truth generation and retrieval metrics
-└── main.py        # example usage
-data/
+└── main.py        # example usagedata/
 ├── raw/           # source dataset (exercises.json)
 ├── processed/     # prepared documents consumed by the index
 └── eval/          # generated ground-truth retrieval questions
@@ -48,13 +47,23 @@ Run an example query through the full RAG pipeline:
 uv run python src/fitness_assistant/main.py
 ```
 
-Generate ground-truth retrieval questions and run evaluation:
+Generate ground-truth retrieval questions (sampled, checkpointed — safe to interrupt):
 
 ```bash
-uv run python src/fitness_assistant/eval/retreiver_eval.py
+uv run python src/fitness_assistant/eval/generate_ground_truth.py --sample-size 150
 ```
 
-This writes `data/eval/ground-truth-retrieval.csv` and prints hit rate / MRR. Note that ground-truth generation calls the LLM for every exercise, so it consumes API quota.
+Run retrieval evaluation (hit rate / MRR):
+
+```bash
+uv run python src/fitness_assistant/eval/evaluate.py
+```
+
+Ground truth is written to `data/eval/ground-truth-retrieval.csv`; generation resumes where it left off and can be forced with `--force`. Generation calls the LLM per exercise, so it consumes API quota. Evaluation supports A/B testing retrieval variants:
+
+```bash
+uv run python src/fitness_assistant/eval/evaluate.py --num-results 5 '--boost={"name": 2.0}'
+```
 
 ## Roadmap
 

@@ -1,19 +1,24 @@
 from tqdm.auto import tqdm
+
+
 def hit_rate(relevance_total):
-    cnt = 0
-    for line in relevance_total:
-        if True in line:
-            cnt += 1
-    return cnt / len(relevance_total)
+    if not relevance_total:
+        return 0.0
+    hits = sum(1 for line in relevance_total if True in line)
+    return hits / len(relevance_total)
+
 
 def mrr(relevance_total):
+    if not relevance_total:
+        return 0.0
     total_score = 0.0
     for line in relevance_total:
-        for rank in range(len(line)):
-            if line[rank]:
+        for rank, relevant in enumerate(line):
+            if relevant:
                 total_score += 1 / (rank + 1)
                 break
     return total_score / len(relevance_total)
+
 
 def evaluate(ground_truth, search_function):
     relevance_total = []
@@ -24,5 +29,5 @@ def evaluate(ground_truth, search_function):
         relevance_total.append(relevance)
     return {
         "hit_rate": hit_rate(relevance_total),
-        "mrr": mrr(relevance_total)
+        "mrr": mrr(relevance_total),
     }
