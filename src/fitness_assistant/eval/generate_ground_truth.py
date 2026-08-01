@@ -53,6 +53,7 @@ Instructions:
 
 
 def build_prompt(doc: dict) -> str:
+    
     return prompt_template.format(
         name=doc["name"],
         category=doc["category"],
