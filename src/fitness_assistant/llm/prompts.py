@@ -1,4 +1,8 @@
-prompt_template = """
+"""Prompt templates and builders for the fitness-assistant RAG pipeline."""
+
+from typing import Union
+
+_SYSTEM_PROMPT = """
 You're a fitness instructor. Answer the QUESTION using only the information provided in the CONTEXT from the exercise database.
 
 If the answer cannot be found in the CONTEXT, say that you don't have enough information.
@@ -10,8 +14,7 @@ CONTEXT:
 {context}
 """.strip()
 
-
-entry_template = """
+_ENTRY_TEMPLATE = """
 Exercise: {name}
 Category: {category}
 Body Part: {body_part}
@@ -25,23 +28,40 @@ Instructions:
 """.strip()
 
 
-def build_prompt(query, search_results):
-    context = ""
+def _format_secondary_muscles(value: Union[list, str]) -> str:
+    """Normalise secondary_muscles regardless of whether it is a list or a
+    pre-joined string (the processed dataset stores it as a string)."""
+    if isinstance(value, list):
+        return ", ".join(value)
+    return value
 
+
+def build_prompt(query: str, search_results: list[dict]) -> str:
+    """Construct a RAG prompt from retrieved exercise documents.
+
+    Args:
+        query: The user's question.
+        search_results: A list of exercise dicts returned by the retriever.
+
+    Returns:
+        A fully-formatted prompt string ready to be sent to the LLM.
+    """
+    entries = []
     for doc in search_results:
-        context += entry_template.format(
-            name=doc["name"],
-            category=doc["category"],
-            body_part=doc["body_part"],
-            target=doc["target"],
-            muscle_group=doc["muscle_group"],
-            secondary_muscles=", ".join(doc["secondary_muscles"]),
-            equipment=doc["equipment"],
-            instructions=doc["instructions"],
+        entries.append(
+            _ENTRY_TEMPLATE.format(
+                name=doc.get("name", ""),
+                category=doc.get("category", ""),
+                body_part=doc.get("body_part", ""),
+                target=doc.get("target", ""),
+                muscle_group=doc.get("muscle_group", ""),
+                secondary_muscles=_format_secondary_muscles(
+                    doc.get("secondary_muscles", "")
+                ),
+                equipment=doc.get("equipment", ""),
+                instructions=doc.get("instructions", ""),
+            )
         )
-        context += "\n\n"
 
-    return prompt_template.format(
-        question=query,
-        context=context.strip(),
-    )
+    context = "\n\n".join(entries)
+    return _SYSTEM_PROMPT.format(question=query, context=context)

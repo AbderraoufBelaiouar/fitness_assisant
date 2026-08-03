@@ -1,15 +1,14 @@
 [project]
 name = "fitness-assistant"
 version = "0.1.0"
-description = "Add your description here"
+description = "RAG-powered fitness assistant: keyword + vector search over 1,324 exercises, answered by a Groq LLM."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "dotenv>=0.9.9",
+    "flask>=3.0.0",
     "groq>=1.6.0",
     "jupyter>=1.1.1",
     "minsearch>=0.2.0",
-    "openai>=2.52.0",
     "pandas>=3.0.5",
     "python-dotenv>=1.2.2",
     "requests>=2.34.2",

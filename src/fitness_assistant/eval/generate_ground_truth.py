@@ -93,7 +93,8 @@ def generate_for_doc(doc: dict) -> list[dict]:
     prompt = build_prompt(doc)
     for attempt in range(MAX_RETRIES):
         try:
-            questions = extract_questions(llm(prompt, model=MODEL))
+            response_text, _ = llm(prompt, model=MODEL)
+            questions = extract_questions(response_text)
             return [{"id": doc["id"], "question": q} for q in questions]
         except Exception as exc:
             last_error = exc
