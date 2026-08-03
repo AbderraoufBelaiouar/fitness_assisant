@@ -1,0 +1,154 @@
+{
+  "__inputs": [],
+  "__requires": [
+    { "type": "grafana", "id": "grafana", "name": "Grafana", "version": "9.0.0" },
+    { "type": "datasource", "id": "postgres", "name": "PostgreSQL", "version": "1.0.0" },
+    { "type": "panel", "id": "stat", "name": "Stat", "version": "" },
+    { "type": "panel", "id": "barchart", "name": "Bar chart", "version": "" },
+    { "type": "panel", "id": "timeseries", "name": "Time series", "version": "" },
+    { "type": "panel", "id": "table", "name": "Table", "version": "" }
+  ],
+  "title": "Fitness Assistant",
+  "uid": "fitness-assistant",
+  "description": "Monitoring dashboard for the Fitness Assistant RAG pipeline",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-24h", "to": "now" },
+  "timepicker": {},
+  "templating": { "list": [] },
+  "annotations": { "list": [] },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Total Conversations (24 h)",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "fitness_postgres" },
+      "targets": [
+        {
+          "rawSql": "SELECT COUNT(*) AS total FROM conversations WHERE timestamp >= NOW() - INTERVAL '24 hours'",
+          "format": "table"
+        }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "blue", "value": null }] } } }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Avg Response Time (24 h)",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "fitness_postgres" },
+      "targets": [
+        {
+          "rawSql": "SELECT ROUND(AVG(response_time)::numeric, 2) AS avg_seconds FROM conversations WHERE timestamp >= NOW() - INTERVAL '24 hours'",
+          "format": "table"
+        }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" },
+      "fieldConfig": { "defaults": { "unit": "s", "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 5 }, { "color": "red", "value": 15 }] } } }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Positive Feedback Rate (24 h)",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "fitness_postgres" },
+      "targets": [
+        {
+          "rawSql": "SELECT ROUND(100.0 * SUM(CASE WHEN feedback = 1 THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0), 1) AS pct FROM feedback WHERE timestamp >= NOW() - INTERVAL '24 hours'",
+          "format": "table"
+        }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" },
+      "fieldConfig": { "defaults": { "unit": "percent", "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "red", "value": null }, { "color": "yellow", "value": 50 }, { "color": "green", "value": 75 }] } } }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Total Tokens Used (24 h)",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "fitness_postgres" },
+      "targets": [
+        {
+          "rawSql": "SELECT SUM(total_tokens + eval_total_tokens) AS tokens FROM conversations WHERE timestamp >= NOW() - INTERVAL '24 hours'",
+          "format": "table"
+        }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "purple", "value": null }] } } }
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Conversations Over Time",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "datasource": { "type": "postgres", "uid": "fitness_postgres" },
+      "targets": [
+        {
+          "rawSql": "SELECT date_trunc('hour', timestamp) AS time, COUNT(*) AS conversations FROM conversations WHERE $__timeFilter(timestamp) GROUP BY 1 ORDER BY 1",
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" } } }
+    },
+    {
+      "id": 6,
+      "type": "barchart",
+      "title": "Relevance Distribution (24 h)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "datasource": { "type": "postgres", "uid": "fitness_postgres" },
+      "targets": [
+        {
+          "rawSql": "SELECT relevance, COUNT(*) AS count FROM conversations WHERE timestamp >= NOW() - INTERVAL '24 hours' GROUP BY relevance ORDER BY count DESC",
+          "format": "table"
+        }
+      ],
+      "options": { "xField": "relevance" },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" } } }
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Avg Response Time Over Time",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "datasource": { "type": "postgres", "uid": "fitness_postgres" },
+      "targets": [
+        {
+          "rawSql": "SELECT date_trunc('hour', timestamp) AS time, ROUND(AVG(response_time)::numeric, 2) AS avg_response_time FROM conversations WHERE $__timeFilter(timestamp) GROUP BY 1 ORDER BY 1",
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" } }
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "User Feedback Over Time",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "datasource": { "type": "postgres", "uid": "fitness_postgres" },
+      "targets": [
+        {
+          "rawSql": "SELECT date_trunc('hour', timestamp) AS time, SUM(CASE WHEN feedback = 1 THEN 1 ELSE 0 END) AS thumbs_up, SUM(CASE WHEN feedback = -1 THEN 1 ELSE 0 END) AS thumbs_down FROM feedback WHERE $__timeFilter(timestamp) GROUP BY 1 ORDER BY 1",
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" } } }
+    },
+    {
+      "id": 9,
+      "type": "table",
+      "title": "Recent Conversations",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 20 },
+      "datasource": { "type": "postgres", "uid": "fitness_postgres" },
+      "targets": [
+        {
+          "rawSql": "SELECT timestamp AT TIME ZONE 'UTC' AS \"Time\", question AS \"Question\", LEFT(answer, 120) || '...' AS \"Answer (preview)\", relevance AS \"Relevance\", ROUND(response_time::numeric, 2) AS \"Time (s)\", model_used AS \"Model\" FROM conversations ORDER BY timestamp DESC LIMIT 20",
+          "format": "table"
+        }
+      ],
+      "options": { "sortBy": [{ "displayName": "Time", "desc": true }] }
+    }
+  ]
+}

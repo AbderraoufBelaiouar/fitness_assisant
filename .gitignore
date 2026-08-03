@@ -1,5 +1,17 @@
+# Secrets
 .env
+
+# Python
 .venv
-.gitignore
 __pycache__
+*.pyc
+*.pyo
+.pytest_cache
+
+# IDE / Editor
 .vscode
+.idea
+
+# Docker volumes / local dev artefacts
+postgres_data/
+grafana_data/
