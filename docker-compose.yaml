@@ -8,7 +8,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -30,7 +30,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
       GROQ_API_KEY: ${GROQ_API_KEY}
-      TZ: ${TZ:-Europe/Berlin}
+      TZ: ${TZ:-Africa/Algiers}
     ports:
       - "5000:5000"
     depends_on:
